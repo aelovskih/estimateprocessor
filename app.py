@@ -5,7 +5,7 @@ import random
 
 def extract_and_prepare_jira_csv(uploaded_file):
     # Загружаем исходный Excel файл и извлекаем нужные столбцы B и C с 7 строки
-    df = pd.read_excel(uploaded_file, sheet_name='Смета 0.1')
+    df = pd.read_excel(uploaded_file, sheet_name=0)
 
     # Извлекаем содержимое столбцов B и C, начиная с 7 строки
     df_subset = df.iloc[6:, [1, 2]].dropna(how='all').reset_index(drop=True)
