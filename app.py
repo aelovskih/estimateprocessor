@@ -24,13 +24,13 @@ def extract_and_prepare_jira_csv(uploaded_file):
         feature = row['Feature']
         detail = row['Details']
 
-        # Если есть значение в столбце Feature, создаём новую запись с типом "Story"
+        # Если есть значение в столбце Feature, создаём новую запись с типом "Функция"
         if pd.notna(feature):
             summary_list.append(feature)
-            issue_type_list.append("Story")
+            issue_type_list.append("Функция")
             custom_id = str(random.randint(100000, 999999))
             custom_link_id_list.append(custom_id)
-            parent_link_id_list.append(None)  # Для "Story" Parent Link ID не заполняется
+            parent_link_id_list.append(None)  # Для "Функции" Parent Link ID не заполняется
             current_custom_link_id = custom_id  # Запоминаем текущий Custom Link ID для последующих строк
         # Если есть значение в столбце Details, создаём запись с типом "ФТ"
         if pd.notna(detail):
