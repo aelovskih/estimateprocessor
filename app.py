@@ -69,6 +69,6 @@ if uploaded_file:
     st.download_button(
         label="Скачать CSV файл",
         data=csv,
-        file_name='Final_Jira_Import.csv',
+        file_name='Jira-Import.csv',
         mime='text/csv'
     )
