@@ -1,0 +1,54 @@
+{
+  "config.version" : "2.0",
+  "config.project.from.csv" : "false",
+  "config.encoding" : "UTF-8",
+  "config.email.suffix" : "@",
+  "config.field.mappings" : {
+    "Custom Link ID" : {
+      "existing.custom.field" : "13831"
+    },
+    "Issue Type" : {
+      "jira.field" : "issuetype"
+    },
+    "Summary" : {
+      "jira.field" : "summary"
+    },
+    "Parent Link ID" : {
+      "existing.custom.field" : "13833"
+    }
+  },
+  "config.value.mappings" : {
+    "Custom Link ID" : {
+      "276088" : "276088",
+      "440365" : "440365"
+    },
+    "Issue Type" : {
+      "Функция" : "12013",
+      "ФТ" : "12007"
+    },
+    "Summary" : {
+      "Старт разработки" : "Старт разработки",
+      "Подключение Loki + Grafana" : "Подключение Loki + Grafana",
+      "Страница 404 и 500 ошибок" : "Страница 404 и 500 ошибок",
+      "Мониторинг логов и ошибок" : "Мониторинг логов и ошибок",
+      "Базовый CI/CD, поднятие дев стенда, взаимоедйствие с девопс заказчика, настройка доступов" : "Базовый CI/CD, поднятие дев стенда, взаимоедйствие с девопс заказчика, настройка доступов",
+      "Мониторинг логов" : "Мониторинг логов",
+      "Мониторинг ошибок - настройка дашбордов" : "Мониторинг ошибок - настройка дашбордов",
+      "Подключение Sentry" : "Подключение Sentry"
+    },
+    "Parent Link ID" : {
+      "440365" : "440365",
+      "276088" : "276088"
+    }
+  },
+  "config.delimiter" : ",",
+  "config.project" : {
+    "project.type" : null,
+    "project.key" : "FT",
+    "project.description" : null,
+    "project.url" : null,
+    "project.name" : "Story - ФТ - Компонент",
+    "project.lead" : "aelovskih"
+  },
+  "config.date.format" : "dd/MMM/yy H:mm"
+}
