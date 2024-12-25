@@ -84,7 +84,7 @@ try:
     st.download_button(
         label="Скачать конфиг-файл для быстрого импорта",
         data=config_data,
-        file_name='Jira-Import-Config.txt',
+        file_name='Jira import config.txt',
         mime='text/plain'
     )
 except FileNotFoundError:
