@@ -8,7 +8,7 @@ def extract_and_prepare_jira_csv(uploaded_file):
     df = pd.read_excel(uploaded_file, sheet_name=0)
 
     # Извлекаем содержимое столбцов B и C, начиная с 7 строки
-    df_subset = df.iloc[6:, [1, 2]].dropna(how='all').reset_index(drop=True)
+    df_subset = df.iloc[5:, [1, 2]].dropna(how='all').reset_index(drop=True)
     df_subset.columns = ['Feature', 'Details']
 
     # Формируем итоговый CSV для импорта в Jira
