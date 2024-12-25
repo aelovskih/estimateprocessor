@@ -72,3 +72,21 @@ if uploaded_file:
         file_name='Jira-Import.csv',
         mime='text/csv'
     )
+
+# Кнопка для скачивания конфиг-файла
+config_file_path = "Конфиг v2.txt"  # Относительный путь к конфиг-файлу
+
+# Читаем содержимое конфиг-файла
+try:
+    with open(config_file_path, 'r') as config_file:
+        config_data = config_file.read()
+
+    st.download_button(
+        label="Скачать конфиг-файл для импорта",
+        data=config_data,
+        file_name='Jira-Import-Config.txt',
+        mime='text/plain'
+    )
+except FileNotFoundError:
+    st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
+
