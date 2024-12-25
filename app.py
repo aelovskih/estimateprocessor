@@ -67,9 +67,9 @@ if uploaded_file:
     # Сохраняем результат в CSV и предоставляем ссылку для скачивания
     csv = result_df.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label="Скачать CSV файл",
+        label="Скачать CSV-файл с тикетами",
         data=csv,
-        file_name='Jira-Import.csv',
+        file_name='Jira tickets.csv',
         mime='text/csv'
     )
 
