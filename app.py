@@ -82,7 +82,7 @@ try:
         config_data = config_file.read()
 
     st.download_button(
-        label="Скачать конфиг-файл для импорта",
+        label="Скачать конфиг-файл для быстрого импорта",
         data=config_data,
         file_name='Jira-Import-Config.txt',
         mime='text/plain'
