@@ -57,7 +57,7 @@ def process_without_epics(uploaded_file):
 
         if pd.notna(detail):
             # Добавляем "[Feature] Details" только если Feature не пустой
-            summary = f"[{feature}] {detail}" if pd.notna(feature) else detail
+            summary = f"[{feature}] {detail}" if pd.notna(feature) else f"[Без названия] {detail}"
             summary_list.append(summary)
             issue_type_list.append("ФТ")
 
@@ -65,6 +65,7 @@ def process_without_epics(uploaded_file):
         'Summary': summary_list,
         'Issue Type': issue_type_list
     })
+
 
 
 # Интерфейс Streamlit
