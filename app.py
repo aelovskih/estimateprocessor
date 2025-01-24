@@ -49,23 +49,23 @@ def process_without_epics(uploaded_file):
     df_subset.columns = ['Feature', 'Details']
 
     summary_list = []
-    issue_type_list = []
 
     for index, row in df_subset.iterrows():
         feature = row['Feature']
         detail = row['Details']
 
         if pd.notna(detail):
-            # Добавляем "[Feature] Details" только если Feature не пустой
-            summary = f"[{feature}] {detail}" if pd.notna(feature) else f"[Без названия] {detail}"
+            # Добавляем "[Feature] Details" только если Feature заполнен
+            if pd.notna(feature):
+                summary = f"[{feature}] {detail}"
+            else:
+                summary = detail  # Если Feature пустой, оставляем только Details
             summary_list.append(summary)
-            issue_type_list.append("ФТ")
 
     return pd.DataFrame({
         'Summary': summary_list,
-        'Issue Type': issue_type_list
+        'Issue Type': ['ФТ'] * len(summary_list)  # Все задачи — тип ФТ
     })
-
 
 
 # Интерфейс Streamlit
@@ -73,7 +73,7 @@ st.title("Jira CSV Generator")
 
 processing_option = st.radio(
     "Выберите вариант обработки данных:",
-    ("Импортировать Функции как Epic's", "НЕ импортировать Эпики")
+    ("Импортировать Функции как Epic's", "Не импортировать Эпики")
 )
 
 uploaded_file = st.file_uploader("Загрузите Excel файл", type=["xlsx"])
