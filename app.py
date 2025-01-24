@@ -56,6 +56,7 @@ def process_without_epics(uploaded_file):
         detail = row['Details']
 
         if pd.notna(detail):
+            # Добавляем "[Feature] Details" только если Feature не пустой
             summary = f"[{feature}] {detail}" if pd.notna(feature) else detail
             summary_list.append(summary)
             issue_type_list.append("ФТ")
@@ -94,6 +95,23 @@ if uploaded_file:
         file_name='Jira-Import.csv',
         mime='text/csv'
     )
+
+# Кнопка для скачивания конфиг-файла
+config_file_path = "Конфиг v2.txt"
+
+try:
+    with open(config_file_path, 'r') as config_file:
+        config_data = config_file.read()
+
+    st.download_button(
+        label="Скачать конфиг-файл для быстрого импорта",
+        data=config_data,
+        file_name='Jira-Import-Config.txt',
+        mime='text/plain'
+    )
+except FileNotFoundError:
+    st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
+
 
 
 
