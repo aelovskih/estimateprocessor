@@ -7,62 +7,41 @@ import openpyxl
 def read_excel_data_only(file, sheet_name=0):
     """
     Читаем Excel-файл с помощью openpyxl (data_only=True),
-    чтобы получить вычисленные значения формул.
-    
-    Возвращаем DataFrame, где первая строка листа будет заголовком df.columns,
-    а последующие строки — данными.
+    чтобы получить вычисленные значения формул,
+    и без использования первой строки как заголовка.
     """
-    # Считываем файл как двоичный поток
     file_data = file.read()
-    # Открываем workbook с data_only=True
     wb = openpyxl.load_workbook(BytesIO(file_data), data_only=True)
-
-    # Определяем, какой лист брать (по индексу или по названию)
     if isinstance(sheet_name, int):
         sheet = wb.worksheets[sheet_name]
     else:
         sheet = wb[sheet_name]
 
-    # Считываем все строки листа в виде списка кортежей
+    # Получаем все строки листа как список кортежей
     data = list(sheet.values)
-
-    # Предполагаем, что первая строка (data[0]) — это названия колонок
-    # Если у вас в файле нет "правильной" строки заголовков, нужно адаптировать логику
-    columns = data[0]
-    rows = data[1:]
-
-    # Создаём DataFrame
-    df = pd.DataFrame(rows, columns=columns)
-
+    # Формируем DataFrame без передачи заголовков
+    df = pd.DataFrame(data)
     return df
-
 
 def find_total_cost_column_name(df):
     """
-    Ищем в df столбец, в котором во второй строке (df.iloc[1, col]) написано "Total cost".
-    Возвращаем название столбца (str), если нашли, иначе None.
+    Ищем в df столбец, в котором во второй строке (df.iloc[1]) написано "Total cost".
+    Возвращаем номер столбца (целое число), если нашли, иначе None.
     """
+    # Перебираем все столбцы (их имена теперь – просто числа: 0, 1, 2, ...)
     for col in df.columns:
         cell_value = df.iloc[1][col]
+        # Проверяем, что cell_value не NaN и его текст равен "Total cost"
         if pd.notna(cell_value) and str(cell_value).strip() == "Total cost":
             return col
     return None
 
-
 def process_with_epics(df):
     """Обработка с включением Epic"""
-
-    # Находим столбец "Total cost" во второй строке
     total_cost_col = find_total_cost_column_name(df)
 
-    # Формируем df_subset из столбцов B, C (индексы 1, 2) после пропуска 5 строк
-    # ВНИМАНИЕ: теперь в df.columns могут быть не просто 'B','C' и т.п.,
-    # а реальные заголовки (или None) в зависимости от структуры файла.
-    # Если исходная таблица в первых строках не имеет "правильных" названий,
-    # придётся ориентироваться на индекс столбца (например, df.iloc[:, [1,2]]),
-    # как мы делали раньше.
-    # Предположим, что "B" и "C" — это 2-й и 3-й столбец в df (т.е. индексы 1 и 2).
-    # Ниже - тот же подход, что и раньше:
+    # Обрабатываем столбцы B и C: по условию в исходном файле они занимают позиции 1 и 2,
+    # а первые 5 строк пропускаем.
     df_subset = df.iloc[5:, [1, 2]].dropna(how='all').reset_index(drop=True)
     df_subset.columns = ['Feature', 'Details']
 
@@ -79,46 +58,32 @@ def process_with_epics(df):
         feature = row['Feature']
         detail = row['Details']
 
-        # "Сырой" индекс в полном df, чтобы достать Total cost
+        # Восстанавливаем индекс строки в полном df (так как мы пропустили первые 5 строк)
         original_row_index = idx + 5
 
         cost_value = None
-        if total_cost_col is not None and (original_row_index < len(df)):
+        if total_cost_col is not None and original_row_index < len(df):
             cost_value = df.iloc[original_row_index][total_cost_col]
 
-        # Если есть Feature - это Эпик
+        # Если есть Feature, это Эпик
         if pd.notna(feature):
             summary_list.append(feature)
             issue_type_list.append("Epic")
-
             custom_id = str(random.randint(100000, 999999))
             custom_link_id_list.append(custom_id)
             parent_link_id_list.append(None)
-
-            # Эпику ставим None (или 0)
-            total_cost_list.append(None)
-
+            total_cost_list.append(None)  # Для эпика оставляем пустым
             current_custom_link_id = custom_id
             current_epic_name = feature
 
-        # Если есть Details - это ФТ
+        # Если есть Details, это ФТ
         if pd.notna(detail):
-            if current_epic_name:
-                ft_summary = f"[{current_epic_name}] {detail}"
-            else:
-                ft_summary = detail
-
+            ft_summary = f"[{current_epic_name}] {detail}" if current_epic_name else detail
             summary_list.append(ft_summary)
             issue_type_list.append("ФТ")
-
             custom_link_id_list.append(None)
             parent_link_id_list.append(current_custom_link_id)
-
-            # У ФТ пишем cost
-            if pd.notna(cost_value):
-                total_cost_list.append(cost_value)
-            else:
-                total_cost_list.append(None)
+            total_cost_list.append(cost_value if pd.notna(cost_value) else None)
 
     return pd.DataFrame({
         'Summary': summary_list,
@@ -128,52 +93,38 @@ def process_with_epics(df):
         'Total cost': total_cost_list
     })
 
-
 def process_without_epics(df):
     """Обработка без включения Epic"""
     total_cost_col = find_total_cost_column_name(df)
-
     df_subset = df.iloc[5:, [1, 2]].dropna(how='all').reset_index(drop=True)
     df_subset.columns = ['Feature', 'Details']
 
     summary_list = []
     total_cost_list = []
-
     current_epic_name = None
 
     for idx, row in df_subset.iterrows():
         feature = row['Feature']
         detail = row['Details']
-
         original_row_index = idx + 5
+
         cost_value = None
-        if total_cost_col is not None and (original_row_index < len(df)):
+        if total_cost_col is not None and original_row_index < len(df):
             cost_value = df.iloc[original_row_index][total_cost_col]
 
-        # Запоминаем новый эпик, но не создаём строку
         if pd.notna(feature):
             current_epic_name = feature
 
-        # Если есть Details - это ФТ
         if pd.notna(detail):
-            if current_epic_name:
-                summary = f"[{current_epic_name}] {detail}"
-            else:
-                summary = detail
+            summary = f"[{current_epic_name}] {detail}" if current_epic_name else detail
             summary_list.append(summary)
-
-            # Для ФТ ставим cost
-            if pd.notna(cost_value):
-                total_cost_list.append(cost_value)
-            else:
-                total_cost_list.append(None)
+            total_cost_list.append(cost_value if pd.notna(cost_value) else None)
 
     return pd.DataFrame({
         'Summary': summary_list,
         'Issue Type': ['ФТ'] * len(summary_list),
         'Total cost': total_cost_list
     })
-
 
 def main():
     st.title("Jira CSV Generator")
@@ -184,23 +135,16 @@ def main():
     )
 
     uploaded_file = st.file_uploader("Загрузите Excel файл", type=["xlsx"])
-
     if uploaded_file:
         st.success("Файл успешно загружен!")
-
-        # 1. Читаем Excel-файл с "data_only=True", чтобы получить вычисленные значения.
+        # Читаем Excel с вычисленными значениями и без заголовков
         df = read_excel_data_only(uploaded_file, sheet_name=0)
-
-        # 2. В зависимости от выбранного режима обрабатываем
         if processing_option == "Импортировать Функции как Epic's":
             result_df = process_with_epics(df)
         else:
             result_df = process_without_epics(df)
 
-        # 3. Выводим результат
         st.dataframe(result_df)
-
-        # 4. Предлагаем скачать CSV
         csv = result_df.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="Скачать CSV файл",
@@ -209,7 +153,6 @@ def main():
             mime='text/csv'
         )
 
-    # Кнопка для скачивания конфиг-файла
     config_file_path = "Конфиг v2.txt"
     try:
         with open(config_file_path, 'r') as config_file:
@@ -222,7 +165,6 @@ def main():
         )
     except FileNotFoundError:
         st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
-
 
 if __name__ == "__main__":
     main()
