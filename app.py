@@ -6,6 +6,7 @@ import random
 def process_with_epics(uploaded_file):
     """Обработка с включением Epic"""
     df = pd.read_excel(uploaded_file, sheet_name=0)
+    # Пропускаем первые 5 строк и берем только столбцы B, C (индексы 1 и 2)
     df_subset = df.iloc[5:, [1, 2]].dropna(how='all').reset_index(drop=True)
     df_subset.columns = ['Feature', 'Details']
 
@@ -15,25 +16,39 @@ def process_with_epics(uploaded_file):
     issue_type_list = []
 
     current_custom_link_id = None
+    current_epic_name = None  # Здесь будем хранить название последнего эпика
 
     for index, row in df_subset.iterrows():
         feature = row['Feature']
         detail = row['Details']
 
+        # Если в строке есть значение в столбце Feature — это наш эпик
         if pd.notna(feature):
             summary_list.append(feature)
             issue_type_list.append("Epic")
+
+            # Генерируем уникальный ID для эпика
             custom_id = str(random.randint(100000, 999999))
             custom_link_id_list.append(custom_id)
             parent_link_id_list.append(None)
-            current_custom_link_id = custom_id
 
+            # Запоминаем ID и название эпика
+            current_custom_link_id = custom_id
+            current_epic_name = feature
+
+        # Если есть значение в столбце Details — это ФТ
         if pd.notna(detail):
-            summary_list.append(detail)
+            # Маска: "[Эпик] ФТ"
+            ft_summary = f"[{current_epic_name}] {detail}"
+
+            summary_list.append(ft_summary)
             issue_type_list.append("ФТ")
+
+            # Для ФТ custom_link_id не нужен, но parent_link_id должен указывать на эпик
             custom_link_id_list.append(None)
             parent_link_id_list.append(current_custom_link_id)
 
+    # Формируем итоговый DataFrame
     return pd.DataFrame({
         'Summary': summary_list,
         'Custom Link ID': custom_link_id_list,
@@ -69,49 +84,54 @@ def process_without_epics(uploaded_file):
 
 
 # Интерфейс Streamlit
-st.title("Jira CSV Generator")
+def main():
+    st.title("Jira CSV Generator")
 
-processing_option = st.radio(
-    "Выберите вариант обработки данных:",
-    ("Импортировать Функции как Epic's", "Не импортировать Эпики")
-)
-
-uploaded_file = st.file_uploader("Загрузите Excel файл", type=["xlsx"])
-
-if uploaded_file:
-    st.success("Файл успешно загружен!")
-
-    if processing_option == "Импортировать Функции как Epic's":
-        result_df = process_with_epics(uploaded_file)
-    else:
-        result_df = process_without_epics(uploaded_file)
-
-    st.dataframe(result_df)
-
-    # Скачивание результата
-    csv = result_df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="Скачать CSV файл",
-        data=csv,
-        file_name='Jira-Import.csv',
-        mime='text/csv'
+    processing_option = st.radio(
+        "Выберите вариант обработки данных:",
+        ("Импортировать Функции как Epic's", "Не импортировать Эпики")
     )
 
-# Кнопка для скачивания конфиг-файла
-config_file_path = "Конфиг v2.txt"
+    uploaded_file = st.file_uploader("Загрузите Excel файл", type=["xlsx"])
 
-try:
-    with open(config_file_path, 'r') as config_file:
-        config_data = config_file.read()
+    if uploaded_file:
+        st.success("Файл успешно загружен!")
 
-    st.download_button(
-        label="Скачать конфиг-файл для быстрого импорта",
-        data=config_data,
-        file_name='Jira-Import-Config.txt',
-        mime='text/plain'
-    )
-except FileNotFoundError:
-    st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
+        if processing_option == "Импортировать Функции как Epic's":
+            result_df = process_with_epics(uploaded_file)
+        else:
+            result_df = process_without_epics(uploaded_file)
+
+        st.dataframe(result_df)
+
+        # Скачивание результата
+        csv = result_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="Скачать CSV файл",
+            data=csv,
+            file_name='Jira-Import.csv',
+            mime='text/csv'
+        )
+
+    # Кнопка для скачивания конфиг-файла
+    config_file_path = "Конфиг v2.txt"
+
+    try:
+        with open(config_file_path, 'r') as config_file:
+            config_data = config_file.read()
+
+        st.download_button(
+            label="Скачать конфиг-файл для быстрого импорта",
+            data=config_data,
+            file_name='Jira-Import-Config.txt',
+            mime='text/plain'
+        )
+    except FileNotFoundError:
+        st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
+
+
+if __name__ == "__main__":
+    main()
 
 
 
@@ -121,23 +141,18 @@ except FileNotFoundError:
 
 
 
-
-
-
+# Рабочая версия от 16.02
 # import streamlit as st
 # import pandas as pd
 # import random
 
 
-# def extract_and_prepare_jira_csv(uploaded_file):
-#     # Загружаем исходный Excel файл и извлекаем нужные столбцы B и C с 7 строки
+# def process_with_epics(uploaded_file):
+#     """Обработка с включением Epic"""
 #     df = pd.read_excel(uploaded_file, sheet_name=0)
-
-#     # Извлекаем содержимое столбцов B и C, начиная с 7 строки
 #     df_subset = df.iloc[5:, [1, 2]].dropna(how='all').reset_index(drop=True)
 #     df_subset.columns = ['Feature', 'Details']
 
-#     # Формируем итоговый CSV для импорта в Jira
 #     summary_list = []
 #     custom_link_id_list = []
 #     parent_link_id_list = []
@@ -145,64 +160,90 @@ except FileNotFoundError:
 
 #     current_custom_link_id = None
 
-#     # Перебираем строки и заполняем итоговые списки
 #     for index, row in df_subset.iterrows():
 #         feature = row['Feature']
 #         detail = row['Details']
 
-#         # Если есть значение в столбце Feature, создаём новую запись с типом "Функция"
 #         if pd.notna(feature):
 #             summary_list.append(feature)
-#             issue_type_list.append("Функция")
+#             issue_type_list.append("Epic")
 #             custom_id = str(random.randint(100000, 999999))
 #             custom_link_id_list.append(custom_id)
-#             parent_link_id_list.append(None)  # Для "Функции" Parent Link ID не заполняется
-#             current_custom_link_id = custom_id  # Запоминаем текущий Custom Link ID для последующих строк
-#         # Если есть значение в столбце Details, создаём запись с типом "ФТ"
+#             parent_link_id_list.append(None)
+#             current_custom_link_id = custom_id
+
 #         if pd.notna(detail):
 #             summary_list.append(detail)
 #             issue_type_list.append("ФТ")
-#             custom_link_id_list.append(None)  # Для "ФТ" Custom Link ID не заполняется
-#             parent_link_id_list.append(current_custom_link_id)  # Используем последний Custom Link ID
+#             custom_link_id_list.append(None)
+#             parent_link_id_list.append(current_custom_link_id)
 
-#     # Создаём итоговый DataFrame
-#     final_df = pd.DataFrame({
+#     return pd.DataFrame({
 #         'Summary': summary_list,
 #         'Custom Link ID': custom_link_id_list,
 #         'Parent Link ID': parent_link_id_list,
 #         'Issue Type': issue_type_list
 #     })
 
-#     return final_df
+
+# def process_without_epics(uploaded_file):
+#     """Обработка без включения Epic"""
+#     df = pd.read_excel(uploaded_file, sheet_name=0)
+#     df_subset = df.iloc[5:, [1, 2]].dropna(how='all').reset_index(drop=True)
+#     df_subset.columns = ['Feature', 'Details']
+
+#     summary_list = []
+
+#     for index, row in df_subset.iterrows():
+#         feature = row['Feature']
+#         detail = row['Details']
+
+#         if pd.notna(detail):
+#             # Добавляем "[Feature] Details" только если Feature заполнен
+#             if pd.notna(feature):
+#                 summary = f"[{feature}] {detail}"
+#             else:
+#                 summary = detail  # Если Feature пустой, оставляем только Details
+#             summary_list.append(summary)
+
+#     return pd.DataFrame({
+#         'Summary': summary_list,
+#         'Issue Type': ['ФТ'] * len(summary_list)  # Все задачи — тип ФТ
+#     })
 
 
 # # Интерфейс Streamlit
 # st.title("Jira CSV Generator")
+
+# processing_option = st.radio(
+#     "Выберите вариант обработки данных:",
+#     ("Импортировать Функции как Epic's", "Не импортировать Эпики")
+# )
 
 # uploaded_file = st.file_uploader("Загрузите Excel файл", type=["xlsx"])
 
 # if uploaded_file:
 #     st.success("Файл успешно загружен!")
 
-#     # Обрабатываем файл и генерируем CSV
-#     result_df = extract_and_prepare_jira_csv(uploaded_file)
+#     if processing_option == "Импортировать Функции как Epic's":
+#         result_df = process_with_epics(uploaded_file)
+#     else:
+#         result_df = process_without_epics(uploaded_file)
 
-#     # Отображаем DataFrame на экране
 #     st.dataframe(result_df)
 
-#     # Сохраняем результат в CSV и предоставляем ссылку для скачивания
+#     # Скачивание результата
 #     csv = result_df.to_csv(index=False).encode('utf-8')
 #     st.download_button(
-#         label="Скачать CSV-файл с тикетами",
+#         label="Скачать CSV файл",
 #         data=csv,
-#         file_name='Jira tickets.csv',
+#         file_name='Jira-Import.csv',
 #         mime='text/csv'
 #     )
 
 # # Кнопка для скачивания конфиг-файла
-# config_file_path = "Конфиг v2.txt"  # Относительный путь к конфиг-файлу
+# config_file_path = "Конфиг v2.txt"
 
-# # Читаем содержимое конфиг-файла
 # try:
 #     with open(config_file_path, 'r') as config_file:
 #         config_data = config_file.read()
@@ -210,9 +251,8 @@ except FileNotFoundError:
 #     st.download_button(
 #         label="Скачать конфиг-файл для быстрого импорта",
 #         data=config_data,
-#         file_name='Jira import config.txt',
+#         file_name='Jira-Import-Config.txt',
 #         mime='text/plain'
 #     )
 # except FileNotFoundError:
 #     st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
-
