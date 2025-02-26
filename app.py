@@ -5,7 +5,7 @@ from io import BytesIO
 import openpyxl
 
 #############################
-# 1. Список допустимых грейдов (для проверки)
+# 1. Список допустимых грейдов
 #############################
 allowed_grades = [
     "Продуктовая аналитика стажер",
@@ -239,7 +239,7 @@ def read_excel_data_only(file, sheet_name=0):
     return df
 
 #############################
-# 3. Проверка грейдов (как в v0.2 / v0.3)
+# 3. Проверка грейдов
 #############################
 def check_grades(df, allowed_grades):
     unknown_grades = set()
@@ -283,9 +283,7 @@ def get_time_estimate_columns(df):
     а в 3-й строке (index=2) написано 'Inside' или 'Outside'.
     """
     grade_cols = []
-    # Диапазон столбцов F..Y: 5..25 (т.к. range верхнюю границу не включает)
-    for col in range(5, 25):
-        # Проверяем, что col не выходит за границы df.columns
+    for col in range(5, 25):  # F..Y
         if col < len(df.columns):
             third_row_value = df.iloc[2, col]
             if pd.notna(third_row_value):
@@ -302,7 +300,7 @@ def get_time_estimate_columns(df):
 #############################
 def process_with_epics(df):
     total_cost_col = find_total_cost_column_name(df)
-    grade_cols = get_time_estimate_columns(df)  # [(grade_name, col_index), ...]
+    grade_cols = get_time_estimate_columns(df)
     start_row = 7  # Подберите под структуру
 
     # Подготовка df_subset
@@ -317,14 +315,13 @@ def process_with_epics(df):
     total_cost_list = []
     function_name_list = []
 
-    # Для времязатрат по грейдам:
-    # При каждом добавлении строки в итоговый CSV мы должны добавлять элемент
-    # и в соответствующие списки grade_values[grade_name].
+    # Списки для грейдов
     grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
 
     current_custom_link_id = None
     current_function_name = None
 
+    # -- Основной цикл --
     for idx, row in df_subset.iterrows():
         feature = row['Feature']
         detail = row['Details']
@@ -336,16 +333,16 @@ def process_with_epics(df):
             cost_value = df.iloc[original_row_index, total_cost_col]
 
         # Проверяем, является ли строка эпиком
-        if pd.notna(feature):
+        if pd.notna(feature) and str(feature).strip() != "":
             # Создаём строку для эпика
             custom_id = str(random.randint(100000, 999999))
             processed_fn = process_function_name(str(feature))
 
-            summary_list.append(feature)        # Summary = сам эпик
+            summary_list.append(feature)  # Summary = сам эпик
             issue_type_list.append("Epic")
             custom_link_id_list.append(custom_id)
             parent_link_id_list.append(None)
-            total_cost_list.append(None)        # У эпика нет Total cost
+            total_cost_list.append(None)  # у эпика нет total cost
             function_name_list.append(processed_fn)
 
             current_custom_link_id = custom_id
@@ -356,9 +353,9 @@ def process_with_epics(df):
                 grade_values[gname].append(None)
 
         # Проверяем, является ли строка ФТ
-        if pd.notna(detail):
+        if pd.notna(detail) and str(detail).strip() != "":
             # Создаём строку для ФТ
-            summary_list.append(detail)         # Summary = только столбец C
+            summary_list.append(detail)  # Summary = только столбец C
             issue_type_list.append("ФТ")
             custom_link_id_list.append(None)
             parent_link_id_list.append(current_custom_link_id)
@@ -374,7 +371,7 @@ def process_with_epics(df):
                     else:
                         grade_values[grade_name].append(None)
 
-    # Формируем итоговый DataFrame
+    # -- Формируем итоговый DataFrame --
     result_df = pd.DataFrame({
         'Summary': summary_list,
         'Custom Link ID': custom_link_id_list,
@@ -384,8 +381,16 @@ def process_with_epics(df):
         'Function name': function_name_list
     })
 
-    # Добавляем столбцы по грейдам
+    # -- Отладка: выводим длины списков в Streamlit --
+    st.write("### Отладочная информация (с эпиками)")
+    st.write(f"Итоговое количество строк в result_df: {len(result_df)}")
+    st.write(f"Количество строк в summary_list: {len(summary_list)}")
+    for grade_name, _ in grade_cols:
+        st.write(f"Грейд '{grade_name}': {len(grade_values[grade_name])} записей")
+
+    # -- Добавляем столбцы по грейдам --
     for (grade_name, _) in grade_cols:
+        # Если выяснится, что длина не совпадает, вы это увидите в отладке
         result_df[grade_name] = grade_values[grade_name]
 
     return result_df
@@ -405,6 +410,7 @@ def process_without_epics(df):
     total_cost_list = []
     function_name_list = []
     issue_type_list = []
+
     grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
 
     current_function_name = None
@@ -418,19 +424,18 @@ def process_without_epics(df):
         if total_cost_col is not None and original_row_index < len(df):
             cost_value = df.iloc[original_row_index, total_cost_col]
 
-        # Если есть Feature, считаем это эпиком (но строку не создаём),
-        # просто запоминаем название эпика
-        if pd.notna(feature):
+        # Если есть Feature (эпик), запоминаем, но не создаём отдельную строку
+        if pd.notna(feature) and str(feature).strip() != "":
             current_function_name = process_function_name(str(feature))
 
-        # Если есть Details, это ФТ (создаём строку)
-        if pd.notna(detail):
+        # Если есть Details (ФТ)
+        if pd.notna(detail) and str(detail).strip() != "":
             summary_list.append(detail)
             total_cost_list.append(cost_value if pd.notna(cost_value) else None)
             function_name_list.append(current_function_name if current_function_name else None)
             issue_type_list.append("ФТ")
 
-            # Для каждого грейда берём значение
+            # Для каждого грейда
             for (grade_name, col_index) in grade_cols:
                 if original_row_index < len(df):
                     val = df.iloc[original_row_index, col_index]
@@ -438,6 +443,11 @@ def process_without_epics(df):
                         grade_values[grade_name].append(val)
                     else:
                         grade_values[grade_name].append(None)
+        else:
+            # Если строка вообще не содержит ФТ (detail), 
+            # то не добавляем строку, следовательно, не добавляем в grade_values
+            # никаких значений.
+            pass
 
     result_df = pd.DataFrame({
         'Summary': summary_list,
@@ -446,6 +456,14 @@ def process_without_epics(df):
         'Function name': function_name_list
     })
 
+    # -- Отладка: выводим длины списков в Streamlit --
+    st.write("### Отладочная информация (без эпиков)")
+    st.write(f"Итоговое количество строк в result_df: {len(result_df)}")
+    st.write(f"Количество строк в summary_list: {len(summary_list)}")
+    for grade_name, _ in grade_cols:
+        st.write(f"Грейд '{grade_name}': {len(grade_values[grade_name])} записей")
+
+    # Добавляем столбцы по грейдам
     for (grade_name, _) in grade_cols:
         result_df[grade_name] = grade_values[grade_name]
 
@@ -467,21 +485,22 @@ def main():
         st.success("Файл успешно загружен!")
         df = read_excel_data_only(uploaded_file, sheet_name=0)
 
-        # Проверяем грейды (предупреждение, если найдены неизвестные)
+        # Проверяем грейды
         unknown_grades = check_grades(df, allowed_grades)
         if unknown_grades:
             st.warning(
                 "Внимание! В смете присутствуют неизвестные грейды: " + ", ".join(unknown_grades)
             )
 
-        # Обрабатываем
         if processing_option == "Импортировать Функции как Epic's":
             result_df = process_with_epics(df)
         else:
             result_df = process_without_epics(df)
 
-        # Показываем и даём скачать
+        # Показываем DataFrame
         st.dataframe(result_df)
+
+        # Скачивание CSV
         csv = result_df.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="Скачать CSV файл",
