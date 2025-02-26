@@ -5,7 +5,7 @@ from io import BytesIO
 import openpyxl
 
 #############################
-# 1. Список допустимых грейдов
+# 1. Список допустимых грейдов (оставляем для проверки)
 #############################
 allowed_grades = [
     "Продуктовая аналитика стажер",
@@ -266,20 +266,6 @@ def find_total_cost_column_name(df):
             return col
     return None
 
-def find_grade_columns(df):
-    grade_columns = []
-    for col in df.columns:
-        if len(df) > 2:
-            third_row_value = df.iloc[2, col]
-            if pd.notna(third_row_value):
-                text = str(third_row_value).strip().lower()
-                if text in ["inside", "outside"]:
-                    grade_val = df.iloc[1, col]
-                    if pd.notna(grade_val):
-                        grade_str = str(grade_val).strip()
-                        grade_columns.append((grade_str, col))
-    return grade_columns
-
 def process_function_name(epic_name):
     # Заменяем пробелы на нижние подчёркивания
     return "_".join(epic_name.split())
@@ -289,9 +275,9 @@ def process_function_name(epic_name):
 #############################
 def process_with_epics(df):
     total_cost_col = find_total_cost_column_name(df)
-    grade_cols = find_grade_columns(df)  # список кортежей (grade_name, col_index)
     start_row = 7  # Подберите под вашу структуру
 
+    # Берём только столбцы B и C
     df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
     df_subset.columns = ['Feature', 'Details']
 
@@ -300,7 +286,7 @@ def process_with_epics(df):
     parent_link_id_list = []
     issue_type_list = []
     total_cost_list = []
-    function_name_list = []  # новый список для столбца "Function name"
+    function_name_list = []  # новый столбец для Function name
 
     current_custom_link_id = None
     current_function_name = None
@@ -314,10 +300,9 @@ def process_with_epics(df):
         if total_cost_col is not None and original_row_index < len(df):
             cost_value = df.iloc[original_row_index, total_cost_col]
 
-        # Если строка с эпиком (Feature заполнен)
+        # Если строка с Эпиком (Feature заполнен)
         if pd.notna(feature):
             custom_id = str(random.randint(100000, 999999))
-            # Обрабатываем имя эпика для кастомного поля
             processed_fn = process_function_name(str(feature))
             summary_list.append(feature)  # для эпика оставляем исходное название
             issue_type_list.append("Epic")
@@ -335,10 +320,9 @@ def process_with_epics(df):
             custom_link_id_list.append(None)
             parent_link_id_list.append(current_custom_link_id)
             total_cost_list.append(cost_value if pd.notna(cost_value) else None)
-            # Для ФТ функция берёт последнее известное значение из Function name
+            # Для ФТ берём последнее известное значение Function name
             function_name_list.append(current_function_name if current_function_name is not None else None)
 
-    # Формируем DataFrame с добавлением нового столбца "Function name"
     result_df = pd.DataFrame({
         'Summary': summary_list,
         'Custom Link ID': custom_link_id_list,
@@ -348,32 +332,6 @@ def process_with_epics(df):
         'Function name': function_name_list
     })
 
-    # Добавляем столбцы для грейдов (как было в предыдущей версии)
-    grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
-    # Здесь перебираем строки заново для оценок по грейдам
-    # (предполагается, что порядок строк совпадает с тем, что мы уже собрали)
-    for idx, row in df_subset.iterrows():
-        original_row_index = idx + start_row
-        if pd.notna(row['Details']):  # оценки только для ФТ
-            for (grade_name, col_index) in grade_cols:
-                if original_row_index < len(df):
-                    val = df.iloc[original_row_index, col_index]
-                    if pd.notna(val) and float(val) != 0.0:
-                        grade_values[grade_name].append(val)
-                    else:
-                        grade_values[grade_name].append(None)
-        else:
-            # Для эпиков заполняем None для всех грейдов
-            for (grade_name, _) in grade_cols:
-                grade_values[grade_name].append(None)
-    for (grade_name, _) in grade_cols:
-        # Убедимся, что длина списка совпадает с числом строк в result_df
-        if len(grade_values[grade_name]) != len(result_df):
-            # Если длины не совпадают, дополняем списки значениями None
-            diff = len(result_df) - len(grade_values[grade_name])
-            grade_values[grade_name].extend([None] * diff)
-        result_df[grade_name] = grade_values[grade_name]
-
     return result_df
 
 #############################
@@ -381,7 +339,6 @@ def process_with_epics(df):
 #############################
 def process_without_epics(df):
     total_cost_col = find_total_cost_column_name(df)
-    grade_cols = find_grade_columns(df)
     start_row = 7
 
     df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
@@ -413,26 +370,6 @@ def process_without_epics(df):
         'Function name': function_name_list
     })
 
-    grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
-    for idx, row in df_subset.iterrows():
-        original_row_index = idx + start_row
-        if pd.notna(row['Details']):
-            for (grade_name, col_index) in grade_cols:
-                if original_row_index < len(df):
-                    val = df.iloc[original_row_index, col_index]
-                    if pd.notna(val) and float(val) != 0.0:
-                        grade_values[grade_name].append(val)
-                    else:
-                        grade_values[grade_name].append(None)
-        else:
-            for (grade_name, _) in grade_cols:
-                grade_values[grade_name].append(None)
-    for (grade_name, _) in grade_cols:
-        if len(grade_values[grade_name]) != len(result_df):
-            diff = len(result_df) - len(grade_values[grade_name])
-            grade_values[grade_name].extend([None] * diff)
-        result_df[grade_name] = grade_values[grade_name]
-
     return result_df
 
 #############################
@@ -451,7 +388,7 @@ def main():
         st.success("Файл успешно загружен!")
         df = read_excel_data_only(uploaded_file, sheet_name=0)
 
-        # Сначала проверяем грейды
+        # Проверяем грейды (для предупреждения, если найдены неизвестные)
         unknown_grades = check_grades(df, allowed_grades)
         if unknown_grades:
             st.warning(
