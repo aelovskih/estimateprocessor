@@ -5,223 +5,10 @@ from io import BytesIO
 import openpyxl
 
 #############################
-# 1. Список допустимых грейдов (оставляем для проверки)
+# 1. Список допустимых грейдов (для проверки)
 #############################
 allowed_grades = [
-    "Продуктовая аналитика стажер",
-    "UX-аналитик junior",
-    "UX-аналитик middle -",
-    "UX-аналитик middle",
-    "UX-аналитик senior",
-    "Web/mobile-аналитик junior",
-    "Web/mobile-аналитик middle -",
-    "Web/mobile-аналитик middle",
-    "Web/mobile-аналитик middle +",
-    "Web/mobile-аналитик senior",
-    "Web/mobile-аналитик TL",
-    "BI/data-аналитик junior",
-    "BI/data-аналитик middle",
-    "BI/data-аналитик middle +",
-    "BI/data-аналитик senior",
-    "Product manager junior",
-    "Product manager middle",
-    "Product manager middle +",
-    "Product manager Senior",
-    "Web/mobile-analyst middle",
-    "Web/mobile-analyst senior",
-    "Дизайнер стажер",
-    "Дизайнер junior-",
-    "Дизайнер junior",
-    "Дизайнер junior+",
-    "Дизайнер middle-",
-    "Дизайнер middle",
-    "Дизайнер middle+",
-    "Дизайнер senior",
-    "Дизайнер senior+",
-    "Art Director",
-    "Web middle",
-    "Web senior",
-    "Системный аналитик Стажер",
-    "Системный аналитик junior-",
-    "Системный аналитик junior",
-    "Системный аналитик junior+",
-    "Системный аналитик middle-",
-    "Системный аналитик middle",
-    "Системный аналитик middle+",
-    "Системный аналитик senior",
-    "Системный аналитик senior+",
-    "Системный аналитик lead",
-    "Проектировщик стажер",
-    "Проектировщик junior",
-    "Проектировщик middle",
-    "Проектировщик middle+",
-    "Проектировщик senior",
-    "Проектировщик senior+",
-    "Проектировщик lead",
-    "System analyst middle",
-    "System analyst senior",
-    "SEO",
-    "tech.writer",
-    "UX writer",
-    "PM стажер",
-    "PM intern",
-    "PM junior",
-    "PM junior+",
-    "PM middle",
-    "PM middle+",
-    "PM senior",
-    "PM senior+",
-    "GH",
-    "PMO",
-    "Bitrix junior",
-    "Bitrix junior+",
-    "Bitrix middle-",
-    "Bitrix middle",
-    "Bitrix middle+",
-    "Bitrix senior-",
-    "Bitrix senior",
-    "Bitrix senior+",
-    "Bitrix teamlead -",
-    "Bitrix teamlead",
-    "Bitrix teamlead +",
-    "Bitrix teamlead grouphead -",
-    "Bitrix teamlead grouphead",
-    "Bitrix teamlead grouphead +",
-    "Bitrix middle",
-    "Bitrix senior",
-    "Разработка стажер",
-    "Framework junior",
-    "Framework junior+",
-    "Framework middle-",
-    "Framework middle",
-    "Framework middle+",
-    "Framework senior-",
-    "Framework senior",
-    "Framework senior+",
-    "Framework teamlead -",
-    "Framework teamlead",
-    "Framework teamlead +",
-    "Framework teamlead grouphead -",
-    "Framework teamlead grouphead",
-    "Framework teamlead grouphead +",
-    "Framework middle",
-    "Framework senior",
-    "QA junior-",
-    "QA junior",
-    "QA junior +",
-    "QA middle-",
-    "QA middle",
-    "QA middle+",
-    "QA senior -",
-    "QA senior",
-    "QA Teamlead",
-    "AQA junior-",
-    "AQA junior",
-    "AQA junior +",
-    "AQA middle-",
-    "AQA middle",
-    "AQA middle+",
-    "AQA senior -",
-    "AQA senior",
-    "AQA teamlead",
-    "QA middle",
-    "QA senior",
-    "QA AT Middle",
-    "QA AT Senior",
-    "Front-end junior",
-    "Front-end junior +",
-    "Front-end middle -",
-    "Front-end middle",
-    "Front-end middle +",
-    "Front-end senior -",
-    "Front-end senior",
-    "Front-end senior +",
-    "Front-end teamlead",
-    "NodeJS junior",
-    "NodeJS junior +",
-    "NodeJS middle -",
-    "NodeJS middle",
-    "NodeJS middle +",
-    "NodeJS senior -",
-    "NodeJS senior",
-    "NodeJS senior +",
-    "NodeJS teamlead",
-    "Front-end html/css middle -",
-    "Front-end html/css middle",
-    "Front-end html/css middle +",
-    "Front-end middle",
-    "Front-end senior",
-    "NodeJS middle",
-    "NodeJS senior",
-    "Front-end html/css middle",
-    "Mobile Dev Junior-",
-    "Mobile Dev Junior",
-    "Mobile Dev Junior+",
-    "Mobile Dev Middle-",
-    "Mobile Dev Middle",
-    "Mobile Dev Middle+",
-    "Mobile Dev Senior-",
-    "Mobile Dev Senior",
-    "Mobile Dev Senior+",
-    "Mobile Dev Teamlead",
-    "Mobile dev middle",
-    "Mobile dev senior",
-    "Python junior",
-    "Python middle-",
-    "Python middle",
-    "Python middle+",
-    "Python senior-",
-    "Python senior",
-    "Python senior+",
-    "Python teamlead",
-    "Golang junior",
-    "Golang middle-",
-    "Golang middle",
-    "Golang middle+",
-    "Golang senior-",
-    "Golang senior",
-    "Golang senior+",
-    "Golang teamlead",
-    "Python middle",
-    "Python senior",
-    "Golang middle",
-    "Golang senior",
-    "Devops junior",
-    "Devops middle-",
-    "Devops middle",
-    "Devops middle+",
-    "Devops senior-",
-    "Devops senior",
-    "Devops senior+",
-    "Devops teamlead",
-    "Devops middle",
-    "Devops senior",
-    "Java middle",
-    "Java senior",
-    ".NET",
-    ".NET Senior",
-    "Security Specialist",
-    "Lead Programmer Researcher / AI",
-    "Programmer researcher / AI",
-    "Senior data analyst / AI",
-    "Middle data analyst / AI",
-    "Junior data analyst / AI",
-    "PM / AI",
-    "Teamlead / AI",
-    "Product analyst / AI",
-    "Solution Architect consultant / AI",
-    "Pr-manager junior",
-    "Pr-manager middle",
-    "Pr-manager senior",
-    "DevRel junior",
-    "DevRel middle",
-    "DevRel senior",
-    "Copywriter middle",
-    "Copywriter senior",
-    "Photographer/Videographer",
-    "Copywriter middle",
-    "Copywriter senior",
-    "Content Manager",
+    # ... ваш список грейдов (без изменений) ...
 ]
 
 #############################
@@ -239,7 +26,7 @@ def read_excel_data_only(file, sheet_name=0):
     return df
 
 #############################
-# 3. Функция для проверки грейдов
+# 3. Проверка грейдов (как в v0.2 / v0.3)
 #############################
 def check_grades(df, allowed_grades):
     unknown_grades = set()
@@ -257,7 +44,7 @@ def check_grades(df, allowed_grades):
     return unknown_grades
 
 #############################
-# 4. Остальные функции
+# 4. Поиск столбца "Total cost"
 #############################
 def find_total_cost_column_name(df):
     for col in df.columns:
@@ -266,29 +53,147 @@ def find_total_cost_column_name(df):
             return col
     return None
 
+#############################
+# 5. Функция для обработки имени эпика
+#############################
 def process_function_name(epic_name):
     # Заменяем пробелы на нижние подчёркивания
     return "_".join(epic_name.split())
 
 #############################
-# 5. Обработка "с эпиками"
+# 6. Жёстко берём столбцы F..Y как "оценочные"
+#############################
+def get_time_estimate_columns(df):
+    """
+    Возвращает список кортежей (grade_name, col_index) для столбцов F..Y (индексы 5..24),
+    где во 2-й строке (index=1) указано название грейда,
+    а в 3-й строке (index=2) написано 'Inside' или 'Outside'.
+    """
+    grade_cols = []
+    # Диапазон столбцов F..Y: 5..25 (т.к. range верхнюю границу не включает)
+    for col in range(5, 25):
+        # Проверяем, что col не выходит за границы df.columns
+        if col < len(df.columns):
+            third_row_value = df.iloc[2, col]
+            if pd.notna(third_row_value):
+                text = str(third_row_value).strip().lower()
+                if text in ["inside", "outside"]:
+                    grade_val = df.iloc[1, col]
+                    if pd.notna(grade_val):
+                        grade_str = str(grade_val).strip()
+                        grade_cols.append((grade_str, col))
+    return grade_cols
+
+#############################
+# 7. Обработка "с эпиками"
 #############################
 def process_with_epics(df):
     total_cost_col = find_total_cost_column_name(df)
-    start_row = 7  # Подберите под вашу структуру
+    grade_cols = get_time_estimate_columns(df)  # [(grade_name, col_index), ...]
+    start_row = 7  # Подберите под структуру
 
-    # Берём только столбцы B и C
+    # Подготовка df_subset
     df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
     df_subset.columns = ['Feature', 'Details']
 
+    # Основные списки
     summary_list = []
     custom_link_id_list = []
     parent_link_id_list = []
     issue_type_list = []
     total_cost_list = []
-    function_name_list = []  # новый столбец для Function name
+    function_name_list = []
+
+    # Для времязатрат по грейдам:
+    # При каждом добавлении строки в итоговый CSV мы должны добавлять элемент
+    # и в соответствующие списки grade_values[grade_name].
+    grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
 
     current_custom_link_id = None
+    current_function_name = None
+
+    for idx, row in df_subset.iterrows():
+        feature = row['Feature']
+        detail = row['Details']
+        original_row_index = idx + start_row
+
+        # Смотрим на Total cost
+        cost_value = None
+        if total_cost_col is not None and original_row_index < len(df):
+            cost_value = df.iloc[original_row_index, total_cost_col]
+
+        # Проверяем, является ли строка эпиком
+        if pd.notna(feature):
+            # Создаём строку для эпика
+            custom_id = str(random.randint(100000, 999999))
+            processed_fn = process_function_name(str(feature))
+
+            summary_list.append(feature)        # Summary = сам эпик
+            issue_type_list.append("Epic")
+            custom_link_id_list.append(custom_id)
+            parent_link_id_list.append(None)
+            total_cost_list.append(None)        # У эпика нет Total cost
+            function_name_list.append(processed_fn)
+
+            current_custom_link_id = custom_id
+            current_function_name = processed_fn
+
+            # Времязатраты для эпика = None
+            for gname in grade_values:
+                grade_values[gname].append(None)
+
+        # Проверяем, является ли строка ФТ
+        if pd.notna(detail):
+            # Создаём строку для ФТ
+            summary_list.append(detail)         # Summary = только столбец C
+            issue_type_list.append("ФТ")
+            custom_link_id_list.append(None)
+            parent_link_id_list.append(current_custom_link_id)
+            total_cost_list.append(cost_value if pd.notna(cost_value) else None)
+            function_name_list.append(current_function_name if current_function_name else None)
+
+            # Времязатраты для ФТ
+            for (grade_name, col_index) in grade_cols:
+                if original_row_index < len(df):
+                    val = df.iloc[original_row_index, col_index]
+                    if pd.notna(val) and float(val) != 0.0:
+                        grade_values[grade_name].append(val)
+                    else:
+                        grade_values[grade_name].append(None)
+
+    # Формируем итоговый DataFrame
+    result_df = pd.DataFrame({
+        'Summary': summary_list,
+        'Custom Link ID': custom_link_id_list,
+        'Parent Link ID': parent_link_id_list,
+        'Issue Type': issue_type_list,
+        'Total cost': total_cost_list,
+        'Function name': function_name_list
+    })
+
+    # Добавляем столбцы по грейдам
+    for (grade_name, _) in grade_cols:
+        result_df[grade_name] = grade_values[grade_name]
+
+    return result_df
+
+#############################
+# 8. Обработка "без эпиков"
+#############################
+def process_without_epics(df):
+    total_cost_col = find_total_cost_column_name(df)
+    grade_cols = get_time_estimate_columns(df)
+    start_row = 7
+
+    df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
+    df_subset.columns = ['Feature', 'Details']
+
+    summary_list = []
+    total_cost_list = []
+    function_name_list = []
+    issue_type_list = []
+    grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
+
     current_function_name = None
 
     for idx, row in df_subset.iterrows():
@@ -300,80 +205,41 @@ def process_with_epics(df):
         if total_cost_col is not None and original_row_index < len(df):
             cost_value = df.iloc[original_row_index, total_cost_col]
 
-        # Если строка с Эпиком (Feature заполнен)
+        # Если есть Feature, считаем это эпиком (но строку не создаём),
+        # просто запоминаем название эпика
         if pd.notna(feature):
-            custom_id = str(random.randint(100000, 999999))
-            processed_fn = process_function_name(str(feature))
-            summary_list.append(feature)  # для эпика оставляем исходное название
-            issue_type_list.append("Epic")
-            custom_link_id_list.append(custom_id)
-            parent_link_id_list.append(None)
-            total_cost_list.append(None)
-            function_name_list.append(processed_fn)
-            current_custom_link_id = custom_id
-            current_function_name = processed_fn
+            current_function_name = process_function_name(str(feature))
 
-        # Если строка с ФТ (Details заполнен)
+        # Если есть Details, это ФТ (создаём строку)
         if pd.notna(detail):
-            summary_list.append(detail)  # теперь только значение из столбца C
-            issue_type_list.append("ФТ")
-            custom_link_id_list.append(None)
-            parent_link_id_list.append(current_custom_link_id)
+            summary_list.append(detail)
             total_cost_list.append(cost_value if pd.notna(cost_value) else None)
-            # Для ФТ берём последнее известное значение Function name
-            function_name_list.append(current_function_name if current_function_name is not None else None)
+            function_name_list.append(current_function_name if current_function_name else None)
+            issue_type_list.append("ФТ")
+
+            # Для каждого грейда берём значение
+            for (grade_name, col_index) in grade_cols:
+                if original_row_index < len(df):
+                    val = df.iloc[original_row_index, col_index]
+                    if pd.notna(val) and float(val) != 0.0:
+                        grade_values[grade_name].append(val)
+                    else:
+                        grade_values[grade_name].append(None)
 
     result_df = pd.DataFrame({
         'Summary': summary_list,
-        'Custom Link ID': custom_link_id_list,
-        'Parent Link ID': parent_link_id_list,
         'Issue Type': issue_type_list,
         'Total cost': total_cost_list,
         'Function name': function_name_list
     })
 
-    return result_df
-
-#############################
-# 6. Обработка "без эпиков"
-#############################
-def process_without_epics(df):
-    total_cost_col = find_total_cost_column_name(df)
-    start_row = 7
-
-    df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
-    df_subset.columns = ['Feature', 'Details']
-
-    summary_list = []
-    total_cost_list = []
-    function_name_list = []
-    current_function_name = None
-
-    for idx, row in df_subset.iterrows():
-        original_row_index = idx + start_row
-        cost_value = None
-        if total_cost_col is not None and original_row_index < len(df):
-            cost_value = df.iloc[original_row_index, total_cost_col]
-
-        if pd.notna(row['Feature']):
-            current_function_name = process_function_name(str(row['Feature']))
-
-        if pd.notna(row['Details']):
-            summary_list.append(row['Details'])
-            total_cost_list.append(cost_value if pd.notna(cost_value) else None)
-            function_name_list.append(current_function_name if current_function_name is not None else None)
-
-    result_df = pd.DataFrame({
-        'Summary': summary_list,
-        'Issue Type': ['ФТ'] * len(summary_list),
-        'Total cost': total_cost_list,
-        'Function name': function_name_list
-    })
+    for (grade_name, _) in grade_cols:
+        result_df[grade_name] = grade_values[grade_name]
 
     return result_df
 
 #############################
-# 7. Основной поток (Streamlit)
+# 9. Основной поток (Streamlit)
 #############################
 def main():
     st.title("Jira CSV Generator")
@@ -388,18 +254,20 @@ def main():
         st.success("Файл успешно загружен!")
         df = read_excel_data_only(uploaded_file, sheet_name=0)
 
-        # Проверяем грейды (для предупреждения, если найдены неизвестные)
+        # Проверяем грейды (предупреждение, если найдены неизвестные)
         unknown_grades = check_grades(df, allowed_grades)
         if unknown_grades:
             st.warning(
                 "Внимание! В смете присутствуют неизвестные грейды: " + ", ".join(unknown_grades)
             )
 
+        # Обрабатываем
         if processing_option == "Импортировать Функции как Epic's":
             result_df = process_with_epics(df)
         else:
             result_df = process_without_epics(df)
 
+        # Показываем и даём скачать
         st.dataframe(result_df)
         csv = result_df.to_csv(index=False).encode('utf-8')
         st.download_button(
@@ -409,6 +277,7 @@ def main():
             mime='text/csv'
         )
 
+    # Кнопка для скачивания конфиг-файла
     config_file_path = "Конфиг v2.txt"
     try:
         with open(config_file_path, 'r') as config_file:
@@ -422,6 +291,7 @@ def main():
     except FileNotFoundError:
         st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
 
+
 if __name__ == "__main__":
     main()
 
@@ -432,7 +302,7 @@ if __name__ == "__main__":
 
 
 
-
+# ВЕРСИЯ 0.3
 
 # import streamlit as st
 # import pandas as pd
@@ -441,7 +311,7 @@ if __name__ == "__main__":
 # import openpyxl
 
 # #############################
-# # 1. Список допустимых грейдов (из v0.2)
+# # 1. Список допустимых грейдов (оставляем для проверки)
 # #############################
 # allowed_grades = [
 #     "Продуктовая аналитика стажер",
@@ -670,18 +540,17 @@ if __name__ == "__main__":
 #         sheet = wb.worksheets[sheet_name]
 #     else:
 #         sheet = wb[sheet_name]
-
 #     data = list(sheet.values)
 #     df = pd.DataFrame(data)
 #     return df
 
 # #############################
-# # 3. Функция для проверки грейдов (из v0.2)
+# # 3. Функция для проверки грейдов
 # #############################
 # def check_grades(df, allowed_grades):
 #     unknown_grades = set()
 #     for col in df.columns:
-#         if len(df) > 2:  # чтобы не выйти за границы
+#         if len(df) > 2:
 #             third_row_value = df.iloc[2, col]
 #             if pd.notna(third_row_value):
 #                 text = str(third_row_value).strip().lower()
@@ -694,33 +563,7 @@ if __name__ == "__main__":
 #     return unknown_grades
 
 # #############################
-# # 4. Функция для поиска грейд-колонок
-# #############################
-# def find_grade_columns(df):
-#     """
-#     Возвращает список кортежей (grade_name, col_index),
-#     где grade_name взят из второй строки (index=1),
-#     а в третьей строке (index=2) должно быть 'Inside' или 'Outside'.
-#     """
-#     grade_columns = []
-#     for col in df.columns:
-#         if len(df) > 2:
-#             third_row_value = df.iloc[2, col]
-#             if pd.notna(third_row_value):
-#                 text = str(third_row_value).strip().lower()
-#                 if text in ["inside", "outside"]:
-#                     # Значит, во второй строке (index=1) лежит грейд
-#                     grade_val = df.iloc[1, col]
-#                     if pd.notna(grade_val):
-#                         grade_str = str(grade_val).strip()
-#                         # Можно не фильтровать по allowed_grades, 
-#                         # чтобы добавить в CSV и "левые" грейды тоже, 
-#                         # или, наоборот, проверить if grade_str in allowed_grades
-#                         grade_columns.append((grade_str, col))
-#     return grade_columns
-
-# #############################
-# # 5. Функция для поиска "Total cost"
+# # 4. Остальные функции
 # #############################
 # def find_total_cost_column_name(df):
 #     for col in df.columns:
@@ -729,166 +572,114 @@ if __name__ == "__main__":
 #             return col
 #     return None
 
+# def process_function_name(epic_name):
+#     # Заменяем пробелы на нижние подчёркивания
+#     return "_".join(epic_name.split())
+
 # #############################
-# # 6. Обработка "с эпиками"
+# # 5. Обработка "с эпиками"
 # #############################
 # def process_with_epics(df):
 #     total_cost_col = find_total_cost_column_name(df)
-#     grade_cols = find_grade_columns(df)  # [(grade_name, col_index), ...]
+#     start_row = 7  # Подберите под вашу структуру
 
-#     # Смещение, где начинаются эпики и ФТ
-#     start_row = 7  # Подстройте под вашу структуру
-
+#     # Берём только столбцы B и C
 #     df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
 #     df_subset.columns = ['Feature', 'Details']
 
-#     # Базовые списки
 #     summary_list = []
 #     custom_link_id_list = []
 #     parent_link_id_list = []
 #     issue_type_list = []
 #     total_cost_list = []
-
-#     # Дополнительно создадим словарь,
-#     # где ключ = grade_name, значение = список оценок (по строкам)
-#     grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
+#     function_name_list = []  # новый столбец для Function name
 
 #     current_custom_link_id = None
-#     current_epic_name = None
+#     current_function_name = None
 
 #     for idx, row in df_subset.iterrows():
 #         feature = row['Feature']
 #         detail = row['Details']
 #         original_row_index = idx + start_row
 
-#         # Total cost
 #         cost_value = None
 #         if total_cost_col is not None and original_row_index < len(df):
 #             cost_value = df.iloc[original_row_index, total_cost_col]
 
-#         # Определяем, эпик это или ФТ
-#         is_epic = pd.notna(feature)
-#         is_ft = pd.notna(detail)
-
-#         # ----- Эпик -----
-#         if is_epic:
-#             summary_list.append(feature)
-#             issue_type_list.append("Epic")
+#         # Если строка с Эпиком (Feature заполнен)
+#         if pd.notna(feature):
 #             custom_id = str(random.randint(100000, 999999))
+#             processed_fn = process_function_name(str(feature))
+#             summary_list.append(feature)  # для эпика оставляем исходное название
+#             issue_type_list.append("Epic")
 #             custom_link_id_list.append(custom_id)
 #             parent_link_id_list.append(None)
 #             total_cost_list.append(None)
+#             function_name_list.append(processed_fn)
 #             current_custom_link_id = custom_id
-#             current_epic_name = feature
+#             current_function_name = processed_fn
 
-#             # Для эпика во всех грейдах добавим None
-#             for gname in grade_values:
-#                 grade_values[gname].append(None)
-
-#         # ----- ФТ -----
-#         if is_ft:
-#             if current_epic_name:
-#                 ft_summary = f"[{current_epic_name}] {detail}"
-#             else:
-#                 ft_summary = detail
-
-#             summary_list.append(ft_summary)
+#         # Если строка с ФТ (Details заполнен)
+#         if pd.notna(detail):
+#             summary_list.append(detail)  # теперь только значение из столбца C
 #             issue_type_list.append("ФТ")
 #             custom_link_id_list.append(None)
 #             parent_link_id_list.append(current_custom_link_id)
-#             # Если cost_value не NaN, записываем, иначе None
 #             total_cost_list.append(cost_value if pd.notna(cost_value) else None)
+#             # Для ФТ берём последнее известное значение Function name
+#             function_name_list.append(current_function_name if current_function_name is not None else None)
 
-#             # Для каждого грейда ищем значение в df
-#             for (grade_name, col_index) in grade_cols:
-#                 if original_row_index < len(df):
-#                     val = df.iloc[original_row_index, col_index]
-#                     # Если val не NaN/None и не 0 — пишем, иначе None
-#                     if pd.notna(val) and float(val) != 0.0:
-#                         grade_values[grade_name].append(val)
-#                     else:
-#                         grade_values[grade_name].append(None)
-
-#     # Формируем DataFrame
 #     result_df = pd.DataFrame({
 #         'Summary': summary_list,
 #         'Custom Link ID': custom_link_id_list,
 #         'Parent Link ID': parent_link_id_list,
 #         'Issue Type': issue_type_list,
-#         'Total cost': total_cost_list
+#         'Total cost': total_cost_list,
+#         'Function name': function_name_list
 #     })
-
-#     # Добавляем в result_df столбцы для каждого грейда
-#     for (grade_name, _) in grade_cols:
-#         result_df[grade_name] = grade_values[grade_name]
 
 #     return result_df
 
 # #############################
-# # 7. Обработка "без эпиков"
+# # 6. Обработка "без эпиков"
 # #############################
 # def process_without_epics(df):
 #     total_cost_col = find_total_cost_column_name(df)
-#     grade_cols = find_grade_columns(df)
-
 #     start_row = 7
+
 #     df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
 #     df_subset.columns = ['Feature', 'Details']
 
 #     summary_list = []
 #     total_cost_list = []
-#     # Для грейдов
-#     grade_values = {grade_name: [] for (grade_name, _) in grade_cols}
-
-#     current_epic_name = None
+#     function_name_list = []
+#     current_function_name = None
 
 #     for idx, row in df_subset.iterrows():
-#         feature = row['Feature']
-#         detail = row['Details']
 #         original_row_index = idx + start_row
-
 #         cost_value = None
 #         if total_cost_col is not None and original_row_index < len(df):
 #             cost_value = df.iloc[original_row_index, total_cost_col]
 
-#         # Если встречаем эпик — просто запоминаем название
-#         if pd.notna(feature):
-#             current_epic_name = feature
+#         if pd.notna(row['Feature']):
+#             current_function_name = process_function_name(str(row['Feature']))
 
-#         # Если это ФТ
-#         if pd.notna(detail):
-#             if current_epic_name:
-#                 summary = f"[{current_epic_name}] {detail}"
-#             else:
-#                 summary = detail
-
-#             summary_list.append(summary)
+#         if pd.notna(row['Details']):
+#             summary_list.append(row['Details'])
 #             total_cost_list.append(cost_value if pd.notna(cost_value) else None)
+#             function_name_list.append(current_function_name if current_function_name is not None else None)
 
-#             # Для каждого грейда ищем значение
-#             for (grade_name, col_index) in grade_cols:
-#                 if original_row_index < len(df):
-#                     val = df.iloc[original_row_index, col_index]
-#                     if pd.notna(val) and float(val) != 0.0:
-#                         grade_values[grade_name].append(val)
-#                     else:
-#                         grade_values[grade_name].append(None)
-
-#     # Формируем DataFrame
 #     result_df = pd.DataFrame({
 #         'Summary': summary_list,
 #         'Issue Type': ['ФТ'] * len(summary_list),
-#         'Total cost': total_cost_list
+#         'Total cost': total_cost_list,
+#         'Function name': function_name_list
 #     })
-
-#     # Добавляем столбцы грейдов
-#     for (grade_name, _) in grade_cols:
-#         result_df[grade_name] = grade_values[grade_name]
 
 #     return result_df
 
 # #############################
-# # 8. Основной поток (Streamlit)
+# # 7. Основной поток (Streamlit)
 # #############################
 # def main():
 #     st.title("Jira CSV Generator")
@@ -903,15 +694,13 @@ if __name__ == "__main__":
 #         st.success("Файл успешно загружен!")
 #         df = read_excel_data_only(uploaded_file, sheet_name=0)
 
-#         # Сначала проверяем грейды (как в v0.2)
+#         # Проверяем грейды (для предупреждения, если найдены неизвестные)
 #         unknown_grades = check_grades(df, allowed_grades)
 #         if unknown_grades:
 #             st.warning(
-#                 "Внимание! В смете присутствуют неизвестные грейды: "
-#                 + ", ".join(unknown_grades)
+#                 "Внимание! В смете присутствуют неизвестные грейды: " + ", ".join(unknown_grades)
 #             )
 
-#         # Затем обрабатываем (с эпиками или без)
 #         if processing_option == "Импортировать Функции как Epic's":
 #             result_df = process_with_epics(df)
 #         else:
@@ -926,7 +715,6 @@ if __name__ == "__main__":
 #             mime='text/csv'
 #         )
 
-#     # Кнопка для скачивания конфиг-файла (из v0.2)
 #     config_file_path = "Конфиг v2.txt"
 #     try:
 #         with open(config_file_path, 'r') as config_file:
@@ -940,9 +728,9 @@ if __name__ == "__main__":
 #     except FileNotFoundError:
 #         st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
 
-
 # if __name__ == "__main__":
 #     main()
+
 
 
 
