@@ -77,7 +77,7 @@ hourly_rates = {
     "Bitrix junior": 850,
     "Bitrix junior+": 1100,
     "Bitrix middle-": 1450,
-    "Bitrix middle": 1950,  
+    "Bitrix middle": 1950,
     "Bitrix middle+": 2400,
     "Bitrix senior-": 2700,
     "Bitrix senior": 2900,
@@ -306,7 +306,28 @@ def sum_estimates(row):
     return total if total != 0 else None
 
 #############################
-# 8. Обработка "с эпиками"
+# 8. Функция для суммирования денежных затрат с отладкой
+#############################
+def sum_costs_debug(row):
+    st.write("Отладка (Cost), строка:", row.tolist())
+    total = 0
+    for x in row:
+        if x is None:
+            continue
+        elif isinstance(x, float) and math.isnan(x):
+            continue
+        elif isinstance(x, str) and x.strip().lower() == "null":
+            continue
+        else:
+            try:
+                total += float(x)
+            except (TypeError, ValueError):
+                continue
+    st.write("Отладка (Cost), сумма:", total)
+    return total if total != 0 else None
+
+#############################
+# 9. Обработка "с эпиками"
 #############################
 def process_with_epics(df):
     total_cost_col = find_total_cost_column_name(df)
@@ -389,35 +410,23 @@ def process_with_epics(df):
     result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
 
-    # Новая часть: вычисляем денежные затраты для каждого грейда
+    # Вычисляем денежные затраты для каждого грейда
     for gname in unique_grades:
         cost_col_name = "[Cost] " + gname
         result_df[cost_col_name] = result_df[gname].apply(lambda x: x * hourly_rates[gname] if x is not None else None)
 
-    # Отладка: выводим информацию по столбцам [Cost]
     cost_columns = ["[Cost] " + g for g in unique_grades]
-    st.write("Отладка: столбцы [Cost]:")
+    st.write("Отладка: данные по столбцам [Cost]:")
     st.write(result_df[cost_columns])
     
-    # Новая часть: вычисляем сумму денежных затрат по всем [Cost] столбцам
-    def sum_costs(row):
-        total = 0
-        for x in row:
-            if x is None:
-                continue
-            try:
-                total += float(x)
-            except (TypeError, ValueError):
-                continue
-        return total if total != 0 else None
-
-    result_df["Сумма денежных затрат"] = result_df[cost_columns].apply(sum_costs, axis=1)
+    # Вычисляем сумму денежных затрат по всем [Cost] столбцам с отладкой
+    result_df["Сумма денежных затрат"] = result_df[cost_columns].apply(sum_costs_debug, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма денежных затрат"] = None
 
     return result_df
 
 #############################
-# 9. Обработка "без эпиков"
+# 10. Обработка "без эпиков"
 #############################
 def process_without_epics(df):
     total_cost_col = find_total_cost_column_name(df)
@@ -483,16 +492,16 @@ def process_without_epics(df):
         result_df[cost_col_name] = result_df[gname].apply(lambda x: x * hourly_rates[gname] if x is not None else None)
 
     cost_columns = ["[Cost] " + g for g in unique_grades]
-    result_df["Сумма денежных затрат"] = result_df[cost_columns].apply(lambda row: sum(float(x) if x is not None else 0 for x in row) or None, axis=1)
+    result_df["Сумма денежных затрат"] = result_df[cost_columns].apply(sum_costs_debug, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма денежных затрат"] = None
 
-    st.write("Отладка: столбцы [Cost] (без эпиков):")
+    st.write("Отладка: данные по столбцам [Cost] (без эпиков):")
     st.write(result_df[cost_columns])
 
     return result_df
 
 #############################
-# 10. Основной поток (Streamlit)
+# 11. Основной поток (Streamlit)
 #############################
 def main():
     st.title("Jira CSV Generator")
