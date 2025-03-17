@@ -3,6 +3,7 @@ import pandas as pd
 import random
 from io import BytesIO
 import openpyxl
+import math
 
 #############################
 # 1. Список допустимых грейдов
@@ -290,17 +291,28 @@ def get_time_estimate_columns(df):
     return grade_cols
 
 #############################
-# 7. Функция для суммирования оценок с отладкой
+# 7. Функция для суммирования оценок с учётом NaN/NULL
 #############################
 def sum_estimates_debug(row):
-    # Выводим отладку для каждой строки: список значений и вычисленную сумму
     st.write("Отладка, строка:", row.tolist())
     total = 0
     for x in row:
-        try:
-            total += float(x)
-        except (TypeError, ValueError):
-            total += 0
+        if x is None:
+            # None трактуем как 0
+            continue
+        elif isinstance(x, float) and math.isnan(x):
+            # NaN трактуем как 0
+            continue
+        elif isinstance(x, str) and x.strip().lower() == "null":
+            # Строка "NULL" тоже трактуем как 0
+            continue
+        else:
+            # Пытаемся привести к float
+            try:
+                total += float(x)
+            except (TypeError, ValueError):
+                # Если что-то пошло не так, прибавляем 0
+                continue
     st.write("Отладка, сумма:", total)
     return total if total != 0 else None
 
@@ -381,14 +393,16 @@ def process_with_epics(df):
         'Function name': function_name_list
     })
 
+    # Преобразуем 0.0 в None для столбцов с оценками
     for gname in unique_grades:
-        # Заменяем 0.0 на None
         values = [None if x == 0.0 else x for x in grade_values[gname]]
         result_df[gname] = values
 
     grade_columns = list(unique_grades)
     st.write("Отладка: данные по грейдам (с эпиками):")
     st.write(result_df[grade_columns])
+
+    # Используем отладочную функцию суммирования
     result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates_debug, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
 
@@ -519,6 +533,7 @@ def main():
         )
     except FileNotFoundError:
         st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
+
 
 if __name__ == "__main__":
     main()
