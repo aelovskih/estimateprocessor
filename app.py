@@ -28,7 +28,7 @@ allowed_grades = [
     "Product manager middle +",
     "Product manager Senior",
     "Web/mobile-analyst middle",
-    "Web/mobile-analитик senior",
+    "Web/mobile-аналитик senior",
     "Дизайнер стажер",
     "Дизайнер junior-",
     "Дизайнер junior",
@@ -290,24 +290,27 @@ def get_time_estimate_columns(df):
     return grade_cols
 
 #############################
-# Функция для суммирования оценок времязатрат
+# 7. Функция для суммирования оценок с отладкой
 #############################
-def sum_estimates(row):
+def sum_estimates_debug(row):
+    # Выводим отладку для каждой строки: список значений и вычисленную сумму
+    st.write("Отладка, строка:", row.tolist())
     total = 0
     for x in row:
         try:
             total += float(x)
         except (TypeError, ValueError):
             total += 0
+    st.write("Отладка, сумма:", total)
     return total if total != 0 else None
 
 #############################
-# 7. Обработка "с эпиками"
+# 8. Обработка "с эпиками"
 #############################
 def process_with_epics(df):
     total_cost_col = find_total_cost_column_name(df)
     grade_cols = get_time_estimate_columns(df)
-    start_row = 7
+    start_row = 7  # Подберите под структуру
 
     df_subset = df.iloc[start_row:, [1, 2]].dropna(how='all').reset_index(drop=True)
     df_subset.columns = ['Feature', 'Details']
@@ -349,6 +352,7 @@ def process_with_epics(df):
             function_name_list.append(processed_fn)
             current_custom_link_id = custom_id
             current_function_name = processed_fn
+            # Для каждой строки эпика добавляем для всех уникальных грейдов начальное значение 0.0
             for gname in unique_grades:
                 grade_values[gname].append(0.0)
 
@@ -378,11 +382,14 @@ def process_with_epics(df):
     })
 
     for gname in unique_grades:
+        # Заменяем 0.0 на None
         values = [None if x == 0.0 else x for x in grade_values[gname]]
         result_df[gname] = values
 
     grade_columns = list(unique_grades)
-    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates, axis=1)
+    st.write("Отладка: данные по грейдам (с эпиками):")
+    st.write(result_df[grade_columns])
+    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates_debug, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
 
     st.write("### Отладочная информация (с эпиками)")
@@ -394,7 +401,7 @@ def process_with_epics(df):
     return result_df
 
 #############################
-# 8. Обработка "без эпиков"
+# 9. Обработка "без эпиков"
 #############################
 def process_without_epics(df):
     total_cost_col = find_total_cost_column_name(df)
@@ -452,7 +459,9 @@ def process_without_epics(df):
         result_df[gname] = values
 
     grade_columns = list(unique_grades)
-    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates, axis=1)
+    st.write("Отладка: данные по грейдам (без эпиков):")
+    st.write(result_df[grade_columns])
+    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates_debug, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
 
     st.write("### Отладочная информация (без эпиков)")
@@ -464,7 +473,7 @@ def process_without_epics(df):
     return result_df
 
 #############################
-# 9. Основной поток (Streamlit)
+# 10. Основной поток (Streamlit)
 #############################
 def main():
     st.title("Jira CSV Generator")
@@ -513,6 +522,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
