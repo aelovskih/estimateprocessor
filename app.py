@@ -77,7 +77,7 @@ hourly_rates = {
     "Bitrix junior": 850,
     "Bitrix junior+": 1100,
     "Bitrix middle-": 1450,
-    "Bitrix middle": 1950,   # Если дублируется, берётся последнее значение
+    "Bitrix middle": 1950,  # При повторении последнее значение берется
     "Bitrix middle+": 2400,
     "Bitrix senior-": 2700,
     "Bitrix senior": 2900,
@@ -103,9 +103,6 @@ hourly_rates = {
     "Framework teamlead grouphead -": 4000,
     "Framework teamlead grouphead": 4300,
     "Framework teamlead grouphead +": 4850,
-    # При повторном указании, последнее значение берётся:
-    "Framework middle": 4000,
-    "Framework senior": 4800,
     "QA junior-": 700,
     "QA junior": 950,
     "QA junior +": 1250,
@@ -290,10 +287,9 @@ def get_time_estimate_columns(df):
     return grade_cols
 
 #############################
-# 7. Функция для суммирования оценок с учётом NaN/NULL (отладочная версия)
+# 7. Функция для суммирования оценок (без отладочной печати)
 #############################
-def sum_estimates_debug(row):
-    st.write("Отладка, строка:", row.tolist())
+def sum_estimates(row):
     total = 0
     for x in row:
         if x is None:
@@ -307,7 +303,6 @@ def sum_estimates_debug(row):
                 total += float(x)
             except (TypeError, ValueError):
                 continue
-    st.write("Отладка, сумма:", total)
     return total if total != 0 else None
 
 #############################
@@ -390,24 +385,20 @@ def process_with_epics(df):
         values = [None if x == 0.0 else x for x in grade_values[gname]]
         result_df[gname] = values
 
+    # Вычисляем столбец "Сумма времязатрат"
     grade_columns = list(unique_grades)
-    st.write("Отладка: данные по грейдам (с эпиками):")
-    st.write(result_df[grade_columns])
-    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates_debug, axis=1)
+    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
 
     # Новая часть: вычисляем денежные затраты для каждого грейда
-    # Добавляем для каждого уникального грейда новый столбец с префиксом "[Cost] "
     for gname in unique_grades:
         cost_col_name = "[Cost] " + gname
-        # Если значение времязатрат для грейда есть, умножаем на почасовую ставку
         result_df[cost_col_name] = result_df[gname].apply(lambda x: x * hourly_rates[gname] if x is not None else None)
 
-    st.write("### Отладочная информация (с эпиками)")
-    st.write(f"Итоговое количество строк: {len(result_df)}")
-    st.write(f"Количество строк в summary_list: {len(summary_list)}")
-    for gname in unique_grades:
-        st.write(f"Грейд '{gname}': {len(grade_values[gname])} записей")
+    # Отладка: выводим информацию по столбцам [Cost]
+    cost_columns = ["[Cost] " + g for g in unique_grades]
+    st.write("Отладка: столбцы [Cost]:")
+    st.write(result_df[cost_columns])
 
     return result_df
 
@@ -470,21 +461,16 @@ def process_without_epics(df):
         result_df[gname] = values
 
     grade_columns = list(unique_grades)
-    st.write("Отладка: данные по грейдам (без эпиков):")
-    st.write(result_df[grade_columns])
-    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates_debug, axis=1)
+    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
 
-    # Новая часть: вычисляем денежные затраты для каждого грейда
     for gname in unique_grades:
         cost_col_name = "[Cost] " + gname
         result_df[cost_col_name] = result_df[gname].apply(lambda x: x * hourly_rates[gname] if x is not None else None)
 
-    st.write("### Отладочная информация (без эпиков)")
-    st.write(f"Итоговое количество строк: {len(result_df)}")
-    st.write(f"Количество строк в summary_list: {len(summary_list)}")
-    for gname in unique_grades:
-        st.write(f"Грейд '{gname}': {len(grade_values[gname])} записей")
+    cost_columns = ["[Cost] " + g for g in unique_grades]
+    st.write("Отладка: столбцы [Cost] (без эпиков):")
+    st.write(result_df[cost_columns])
 
     return result_df
 
