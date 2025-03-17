@@ -290,6 +290,18 @@ def get_time_estimate_columns(df):
     return grade_cols
 
 #############################
+# Функция для суммирования оценок времязатрат
+#############################
+def sum_estimates(row):
+    total = 0
+    for x in row:
+        try:
+            total += float(x)
+        except (TypeError, ValueError):
+            total += 0
+    return total if total != 0 else None
+
+#############################
 # 7. Обработка "с эпиками"
 #############################
 def process_with_epics(df):
@@ -337,7 +349,6 @@ def process_with_epics(df):
             function_name_list.append(processed_fn)
             current_custom_link_id = custom_id
             current_function_name = processed_fn
-            # Для каждой строки эпика добавляем для всех уникальных грейдов 0.0
             for gname in unique_grades:
                 grade_values[gname].append(0.0)
 
@@ -366,17 +377,19 @@ def process_with_epics(df):
         'Function name': function_name_list
     })
 
-    # Преобразуем 0.0 в None для столбцов с оценками
     for gname in unique_grades:
         values = [None if x == 0.0 else x for x in grade_values[gname]]
         result_df[gname] = values
 
-    # Добавляем столбец "Сумма времязатрат" – сумма по всем грейдам для ФТ (для эпиков оставляем None)
     grade_columns = list(unique_grades)
-    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(
-        lambda row: sum(x if x is not None else 0 for x in row), axis=1
-    )
+    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
+
+    st.write("### Отладочная информация (с эпиками)")
+    st.write(f"Итоговое количество строк: {len(result_df)}")
+    st.write(f"Количество строк в summary_list: {len(summary_list)}")
+    for gname in unique_grades:
+        st.write(f"Грейд '{gname}': {len(grade_values[gname])} записей")
 
     return result_df
 
@@ -439,10 +452,14 @@ def process_without_epics(df):
         result_df[gname] = values
 
     grade_columns = list(unique_grades)
-    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(
-        lambda row: sum(x if x is not None else 0 for x in row), axis=1
-    )
+    result_df["Сумма времязатрат"] = result_df[grade_columns].apply(sum_estimates, axis=1)
     result_df.loc[result_df["Issue Type"] == "Epic", "Сумма времязатрат"] = None
+
+    st.write("### Отладочная информация (без эпиков)")
+    st.write(f"Итоговое количество строк: {len(result_df)}")
+    st.write(f"Количество строк в summary_list: {len(summary_list)}")
+    for gname in unique_grades:
+        st.write(f"Грейд '{gname}': {len(grade_values[gname])} записей")
 
     return result_df
 
@@ -464,9 +481,7 @@ def main():
 
         unknown_grades = check_grades(df, allowed_grades)
         if unknown_grades:
-            st.warning(
-                "Внимание! В смете присутствуют неизвестные грейды: " + ", ".join(unknown_grades)
-            )
+            st.warning("Внимание! В смете присутствуют неизвестные грейды: " + ", ".join(unknown_grades))
 
         if processing_option == "Импортировать Функции как Epic's":
             result_df = process_with_epics(df)
@@ -496,9 +511,9 @@ def main():
     except FileNotFoundError:
         st.error(f"Файл {config_file_path} не найден. Убедитесь, что он загружен в репозиторий.")
 
-
 if __name__ == "__main__":
     main()
+
 
 
 
